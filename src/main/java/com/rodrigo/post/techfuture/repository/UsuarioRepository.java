@@ -6,5 +6,7 @@ import org.springframework.stereotype.Repository;
 import com.rodrigo.post.techfuture.entities.Usuario;
 @Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Long>{
+
+    Usuario findByUsername(String string);
     
 }

@@ -1,5 +1,6 @@
 package com.rodrigo.post.techfuture.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,6 +15,9 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    @Autowired
+    private UserDetailsServiceConfig userDetailsServiceConfig;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -25,7 +29,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/user/**").hasRole("USER")
-                        .requestMatchers("/login", "/register", "/resources/**", "/css/**", "/js/**").permitAll()
+                        .requestMatchers("/login", "/register", "/resources/**", "/css/**", "/js/**")
+                        .permitAll()
                         .anyRequest().authenticated())
                 .formLogin(form -> form
                         .loginPage("/login")
@@ -40,23 +45,13 @@ public class SecurityConfig {
                         .permitAll())
                 .csrf(csrf -> csrf
                         .ignoringRequestMatchers("/h2-console/**"));
-
         return http.build();
     }
 
     @Bean
     public AuthenticationManager authManager(HttpSecurity http) throws Exception {
-        AuthenticationManagerBuilder authenticationManagerBuilder = http
-                .getSharedObject(AuthenticationManagerBuilder.class);
-
-        // Configuração com usuários em memória para teste
-        authenticationManagerBuilder
-                .inMemoryAuthentication()
-                .withUser("admin").password(passwordEncoder().encode("admin123")).roles("ADMIN")
-                .and()
-                .withUser("user").password(passwordEncoder().encode("user123")).roles("USER");
-
+        AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
+        authenticationManagerBuilder.userDetailsService(userDetailsServiceConfig.userDetailsService());
         return authenticationManagerBuilder.build();
     }
-
 }
